@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { HeroBackground } from "./HeroBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -67,11 +66,11 @@ export function Problem() {
           gsap.set(line, { clipPath: "inset(0 100% 0 0)" });
           ScrollTrigger.create({
             trigger: panel,
-            start: "top 72%",
+            start: "top 82%",
             onEnter: () =>
               gsap.to(line, {
                 clipPath: "inset(0 0% 0 0)",
-                duration: 1.4,
+                duration: 0.75,
                 ease: "expo.inOut",
               }),
             once: true,
@@ -85,17 +84,17 @@ export function Problem() {
           const obj = { val: 0 };
           ScrollTrigger.create({
             trigger: panel,
-            start: "top 68%",
+            start: "top 80%",
             onEnter: () => {
               gsap.to(numEl, {
                 opacity: 1,
                 clipPath: "inset(0% 0 0 0)",
-                duration: 1,
+                duration: 0.6,
                 ease: "expo.out",
               });
               gsap.to(obj, {
                 val: PROBLEMS[i].num,
-                duration: 1.6,
+                duration: 0.9,
                 ease: "power3.out",
                 onUpdate() {
                   if (numEl) numEl.textContent = `0${Math.round(obj.val)}`;
@@ -109,14 +108,14 @@ export function Problem() {
         /* Content fade-up */
         const content = contentRefs.current[i];
         if (content) {
-          gsap.set(content, { opacity: 0, y: 28 });
+          gsap.set(content, { opacity: 0, y: 18 });
           ScrollTrigger.create({
             trigger: panel,
-            start: "top 65%",
+            start: "top 78%",
             onEnter: () =>
               gsap.to(content, {
                 opacity: 1, y: 0,
-                duration: 1.1,
+                duration: 0.65,
                 ease: "expo.out",
               }),
             once: true,
@@ -148,17 +147,14 @@ export function Problem() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="problem" style={{ background: "#F5F1E8", position: "relative", overflow: "hidden" }}>
-
-      {/* Fluid shader — same as Hero */}
-      <HeroBackground />
+    <section ref={sectionRef} id="problem">
 
       {/* Top rule */}
-      <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
+      <div className="wrap">
         <div style={{ height: "1px", background: "rgba(15,14,12,0.10)" }} />
       </div>
 
-      <div className="prb-layout" style={{ position: "relative", zIndex: 1 }}>
+      <div className="prb-layout">
 
         {/* ══════════ LEFT — sticky manifesto ══════════ */}
         <div className="prb-left">

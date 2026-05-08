@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { HeroBackground } from "./HeroBackground";
 import { ScrollIndicator } from "./ScrollIndicator";
 
 /*
@@ -40,12 +39,12 @@ export function Hero() {
     );
 
     /* ── Master timeline ────────────────────────────────────────────────────── */
-    const tl = gsap.timeline({ delay: 0.4 });
+    const tl = gsap.timeline({ delay: 0.2 });
 
     // Eyebrow line
     tl.to(eyebrowRef.current, {
       opacity: 1, y: 0,
-      duration: 0.9,
+      duration: 0.6,
       ease: "expo.out",
     });
 
@@ -55,29 +54,29 @@ export function Hero() {
         el,
         {
           clipPath: "inset(0% 0 0 0)",
-          duration: 1.35,
+          duration: 0.85,
           ease: "expo.out",
-          delay: LETTERS[i].delay,
+          delay: LETTERS[i].delay * 0.7,   // tighten stagger
         },
-        "<0.05"
+        "<0.03"
       );
     });
 
-    // Subtitle + CTA after wordmark settles
+    // Subtitle + CTA
     tl.to(
       subtitleRef.current,
-      { opacity: 1, y: 0, duration: 0.85, ease: "expo.out" },
-      "+=0.05"
+      { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" },
+      "+=0.0"
     );
     tl.to(
       ctaRef.current,
-      { opacity: 1, y: 0, duration: 0.8, ease: "expo.out" },
-      "-=0.4"
+      { opacity: 1, y: 0, duration: 0.55, ease: "expo.out" },
+      "-=0.3"
     );
     tl.to(
       taglineRef.current,
-      { opacity: 1, y: 0, duration: 0.75, ease: "expo.out" },
-      "-=0.45"
+      { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" },
+      "-=0.35"
     );
 
     return () => { tl.kill(); };
@@ -85,13 +84,10 @@ export function Hero() {
 
   return (
     <section
-      className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden bg-cream"
+      className="relative min-h-[100svh] flex flex-col items-center justify-center"
       aria-label="Hero"
     >
-      {/* Fluid shader background */}
-      <HeroBackground />
-
-      {/* Gentle center bloom — text area stays cream-light */}
+      {/* Gentle center bloom — softens the fixed shader beneath */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"

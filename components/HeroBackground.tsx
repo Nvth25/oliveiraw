@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-/* ─── Shaders ────────────────────────────────────────────────────────────────*/
+/* ─── Shaders ─────────────────────────────────────────────────────────────── */
 const VERT = /* glsl */`
   varying vec2 vUv;
   void main() {
@@ -12,17 +12,16 @@ const VERT = /* glsl */`
 `;
 
 /*
-  Domain-warped FBM fluid on cream base.
-  Warm amber / terracotta / gold palette — neutral luxury.
-  Two rounds of domain warping produce the organic folding shapes.
+  Domain-warped FBM — 4 octaves (down from 5), single warp pass.
+  Warm amber / gold / terracotta on cream. Runs as one fixed canvas
+  behind the whole page for performance.
 */
 const FRAG = /* glsl */`
-  precision highp float;
+  precision mediump float;
   varying vec2 vUv;
   uniform float uTime;
-  uniform vec2  uMouse;   /* normalized 0-1 */
+  uniform vec2  uMouse;
 
-  /* ── Helpers ── */
   mat2 rot2(float a) {
     float c = cos(a), s = sin(a);
     return mat2(c, -s, s, c);
@@ -39,15 +38,15 @@ const FRAG = /* glsl */`
     vec2 f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
     return mix(
-      mix(hash(i),              hash(i + vec2(1,0)), f.x),
-      mix(hash(i + vec2(0,1)),  hash(i + vec2(1,1)), f.x),
+      mix(hash(i),             hash(i + vec2(1,0)), f.x),
+      mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), f.x),
       f.y
     );
   }
 
   float fbm(vec2 p) {
     float v = 0.0, a = 0.52;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {   /* 4 octaves — good quality, fast */
       v += a * vnoise(p);
       p  = rot2(0.37) * p * 2.04 + vec2(1.72, 9.2);
       a *= 0.5;
@@ -55,67 +54,63 @@ const FRAG = /* glsl */`
     return v;
   }
 
-  /* ── Main ── */
   void main() {
     vec2 uv = vUv;
 
-    /* Gentle mouse warp */
-    vec2 m = uMouse - 0.5;
-    uv += m * 0.035;
+    /* Mouse warp */
+    uv += (uMouse - 0.5) * 0.03;
 
-    /* First warp layer (q) */
-    float t1 = uTime * 0.055;
+    /* Single domain-warp pass */
+    float t = uTime * 0.045;
     vec2 q = vec2(
-      fbm(uv * 1.6 + vec2(0.0, 0.0) + t1),
-      fbm(uv * 1.6 + vec2(5.2, 1.3) - t1 * 0.8)
+      fbm(uv * 1.6 + t),
+      fbm(uv * 1.6 + vec2(5.2, 1.3) - t * 0.8)
     );
 
-    /* Second warp layer (r) */
-    float t2 = uTime * 0.03;
-    vec2 r = vec2(
-      fbm(uv * 1.3 + 3.8 * q + vec2(1.7, 9.2) + t2),
-      fbm(uv * 1.3 + 3.8 * q + vec2(8.3, 2.8) - t2)
-    );
+    float f = fbm(uv * 1.2 + 3.2 * q);
 
-    float f = fbm(uv * 1.1 + 3.5 * r);
-
-    /* ── Colour palette ── */
-    vec3 cream  = vec3(0.961, 0.945, 0.910);  /* #F5F1E8 */
-    vec3 ivory  = vec3(0.910, 0.890, 0.855);  /* slightly deeper cream */
-    vec3 amber  = vec3(0.780, 0.600, 0.300);  /* warm amber */
-    vec3 terra  = vec3(0.660, 0.400, 0.260);  /* terracotta */
-    vec3 gold   = vec3(0.820, 0.700, 0.440);  /* pale gold */
-    vec3 umber  = vec3(0.540, 0.410, 0.280);  /* dark warm umber */
+    /* Palette */
+    vec3 cream = vec3(0.961, 0.945, 0.910);
+    vec3 ivory = vec3(0.905, 0.882, 0.848);
+    vec3 gold  = vec3(0.820, 0.695, 0.430);
+    vec3 amber = vec3(0.775, 0.590, 0.280);
+    vec3 terra = vec3(0.650, 0.390, 0.245);
 
     vec3 col = cream;
-    col = mix(col, ivory, smoothstep(0.30, 0.60, f)                        * 0.80);
-    col = mix(col, gold,  smoothstep(0.40, 0.75, f * f + q.x * 0.25)      * 0.65);
-    col = mix(col, amber, smoothstep(0.50, 0.85, f + r.x * 0.30)          * 0.55);
-    col = mix(col, terra, smoothstep(0.60, 0.95, r.y + q.y * 0.40)        * 0.38);
-    col = mix(col, umber, smoothstep(0.72, 1.00, f * f * f + r.x * 0.2)   * 0.22);
+    col = mix(col, ivory, smoothstep(0.28, 0.58, f)               * 0.85);
+    col = mix(col, gold,  smoothstep(0.38, 0.72, f*f + q.x*0.25)  * 0.68);
+    col = mix(col, amber, smoothstep(0.48, 0.82, f + q.y*0.28)    * 0.52);
+    col = mix(col, terra, smoothstep(0.60, 0.92, q.x + q.y*0.4)   * 0.30);
 
-    /* Subtle radial bloom: keep centre lighter for text legibility */
-    float bloom = 1.0 - smoothstep(0.0, 0.75, length(uv - 0.5));
-    col = mix(col, cream, bloom * 0.18);
+    /* Centre bloom keeps text readable */
+    float bloom = 1.0 - smoothstep(0.0, 0.70, length(uv - 0.5));
+    col = mix(col, cream, bloom * 0.22);
 
     gl_FragColor = vec4(col, 1.0);
   }
 `;
 
-export function HeroBackground() {
+/* ─── Component ─────────────────────────────────────────────────────────────*/
+interface Props {
+  /** When true: position:fixed behind the whole page (use once in layout).
+   *  When false (default): position:absolute filling nearest relative parent. */
+  fixed?: boolean;
+}
+
+export function HeroBackground({ fixed = false }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = mountRef.current;
     if (!el) return;
 
-    /* ── Renderer ── */
+    /* Renderer — pixel ratio capped at 1 for GPU budget */
     const renderer = new THREE.WebGLRenderer({ antialias: false });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.setPixelRatio(1);
     renderer.setSize(el.offsetWidth, el.offsetHeight);
     el.appendChild(renderer.domElement);
 
-    /* ── Fullscreen quad ── */
+    /* Fullscreen quad */
     const scene    = new THREE.Scene();
     const camera   = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const geo      = new THREE.PlaneGeometry(2, 2);
@@ -123,18 +118,21 @@ export function HeroBackground() {
       uTime:  { value: 0 },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
     };
-    const mat   = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms });
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      uniforms,
+    });
     scene.add(new THREE.Mesh(geo, mat));
 
-    /* ── Mouse ── */
+    /* Mouse */
     const smoothMouse = new THREE.Vector2(0.5, 0.5);
     const rawMouse    = new THREE.Vector2(0.5, 0.5);
-    const onMouse = (e: MouseEvent) => {
+    const onMouse = (e: MouseEvent) =>
       rawMouse.set(e.clientX / innerWidth, 1 - e.clientY / innerHeight);
-    };
     window.addEventListener("mousemove", onMouse, { passive: true });
 
-    /* ── Loop ── */
+    /* RAF loop */
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
@@ -142,16 +140,16 @@ export function HeroBackground() {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
       uniforms.uTime.value += dt;
-      smoothMouse.lerp(rawMouse, 0.05);
+      smoothMouse.lerp(rawMouse, 0.06);
       uniforms.uMouse.value.copy(smoothMouse);
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);
 
-    /* ── Resize ── */
-    const ro = new ResizeObserver(() => {
-      renderer.setSize(el.offsetWidth, el.offsetHeight);
-    });
+    /* Resize */
+    const ro = new ResizeObserver(() =>
+      renderer.setSize(el.offsetWidth, el.offsetHeight)
+    );
     ro.observe(el);
 
     return () => {
@@ -163,5 +161,15 @@ export function HeroBackground() {
     };
   }, []);
 
-  return <div ref={mountRef} className="absolute inset-0" aria-hidden />;
+  return (
+    <div
+      ref={mountRef}
+      aria-hidden
+      style={
+        fixed
+          ? { position: "fixed", inset: 0, zIndex: -1, pointerEvents: "none" }
+          : { position: "absolute", inset: 0, pointerEvents: "none" }
+      }
+    />
+  );
 }

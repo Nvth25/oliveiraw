@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { HeroBackground } from "./HeroBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -64,14 +63,14 @@ export function Solution() {
     if (!section || !traveler) return;
 
     /* ── Section entrance ────────────────────────────────────────────────── */
-    gsap.set(section, { opacity: 0, y: 60 });
+    gsap.set(section, { opacity: 0, y: 40 });
     ScrollTrigger.create({
       trigger: section,
-      start: "top 78%",
+      start: "top 88%",
       onEnter: () =>
         gsap.to(section, {
           opacity: 1, y: 0,
-          duration: 1.1,
+          duration: 0.7,
           ease: "expo.out",
         }),
       once: true,
@@ -109,9 +108,9 @@ export function Solution() {
           if (!line) return;
           gsap.to(line, {
             strokeDashoffset: 0,
-            duration: 1.2,
+            duration: 0.65,
             ease: "expo.inOut",
-            delay: i * 0.18,
+            delay: i * 0.1,
           });
         });
         /* Node pop-in */
@@ -122,14 +121,14 @@ export function Solution() {
             { scale: 0.6, opacity: 0, transformOrigin: `${NODES[i].x}px ${NODES[i].cy}px` },
             {
               scale: 1, opacity: 1,
-              duration: 0.7,
+              duration: 0.5,
               ease: "back.out(1.8)",
-              delay: i * 0.14,
+              delay: i * 0.08,
             }
           );
         });
         /* Kick off traveler loop after lines draw */
-        setTimeout(startLoop, 1400);
+        setTimeout(startLoop, 800);
       },
       once: true,
     });
@@ -214,17 +213,13 @@ export function Solution() {
     <section
       ref={sectionRef}
       id="solution"
-      style={{ background: "#F5F1E8", position: "relative", overflow: "hidden" }}
     >
-      {/* Fluid shader — same as Hero */}
-      <HeroBackground />
-
       {/* Top rule */}
-      <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
+      <div className="wrap">
         <div style={{ height: "1px", background: "rgba(15,14,12,0.10)" }} />
       </div>
 
-      <div className="wrap" style={{ paddingTop: "6rem", paddingBottom: "6rem", position: "relative", zIndex: 1 }}>
+      <div className="wrap" style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
 
         {/* ── Manifesto header ────────────────────────────────────────────── */}
         <div ref={headRef} className="sol-head">
