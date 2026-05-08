@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { HeroBackground } from "./HeroBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -184,7 +185,7 @@ export function Solution() {
             n,
             {
               attr: { r: NODES[nodeIdx].r + 5 },
-              fill: "#C6F432",
+              fill: "rgba(15,14,12,0.10)",
               duration: 0.2,
               ease: "power1.out",
               yoyo: true,
@@ -213,14 +214,17 @@ export function Solution() {
     <section
       ref={sectionRef}
       id="solution"
-      style={{ background: "#F5F1E8" }}
+      style={{ background: "#F5F1E8", position: "relative", overflow: "hidden" }}
     >
+      {/* Fluid shader — same as Hero */}
+      <HeroBackground />
+
       {/* Top rule */}
-      <div className="wrap">
+      <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
         <div style={{ height: "1px", background: "rgba(15,14,12,0.10)" }} />
       </div>
 
-      <div className="wrap" style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
+      <div className="wrap" style={{ paddingTop: "6rem", paddingBottom: "6rem", position: "relative", zIndex: 1 }}>
 
         {/* ── Manifesto header ────────────────────────────────────────────── */}
         <div ref={headRef} className="sol-head">
@@ -233,7 +237,7 @@ export function Solution() {
                 style={{
                   fontVariationSettings: '"opsz" 144, "SOFT" 50, "ital" 1',
                   fontStyle: "normal",
-                  color: "#C6F432",
+                  color: "#0F0E0C",
                 }}
               >
                 We build the system
@@ -286,7 +290,7 @@ export function Solution() {
               cx={LINES[0].x1}
               cy={90}
               r={4}
-              fill="#C6F432"
+              fill="#0F0E0C"
               opacity={0}
             />
 

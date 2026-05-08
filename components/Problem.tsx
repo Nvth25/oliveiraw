@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { HeroBackground } from "./HeroBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -147,14 +148,17 @@ export function Problem() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="problem" style={{ background: "#F5F1E8" }}>
+    <section ref={sectionRef} id="problem" style={{ background: "#F5F1E8", position: "relative", overflow: "hidden" }}>
+
+      {/* Fluid shader — same as Hero */}
+      <HeroBackground />
 
       {/* Top rule */}
-      <div className="wrap">
+      <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
         <div style={{ height: "1px", background: "rgba(15,14,12,0.10)" }} />
       </div>
 
-      <div className="prb-layout">
+      <div className="prb-layout" style={{ position: "relative", zIndex: 1 }}>
 
         {/* ══════════ LEFT — sticky manifesto ══════════ */}
         <div className="prb-left">
@@ -166,7 +170,7 @@ export function Problem() {
               Most businesses{" "}
               <em
                 style={{
-                  color: "#C6F432",
+                  color: "#0F0E0C",
                   fontVariationSettings: '"opsz" 144, "SOFT" 40, "ital" 1',
                   fontStyle: "normal",
                 }}
@@ -232,7 +236,7 @@ export function Problem() {
                         <em
                           key={j}
                           style={{
-                            color: "#C6F432",
+                            color: "#0F0E0C",
                             fontVariationSettings: '"opsz" 144, "SOFT" 40, "ital" 1',
                             fontStyle: "normal",
                           }}
@@ -338,7 +342,7 @@ export function Problem() {
           font-size: clamp(6.5rem, 12vw, 14rem);
           font-weight: 300;
           line-height: 0.82;
-          color: #C6F432;
+          color: rgba(15,14,12,0.16);
           flex-shrink: 0;
           letter-spacing: -0.04em;
           user-select: none;
@@ -382,7 +386,7 @@ export function Problem() {
           padding: 0.875rem 1.125rem;
           background: rgba(15,14,12,0.032);
           border-radius: 0.375rem;
-          border-left: 2px solid #C6F432;
+          border-left: 2px solid rgba(15,14,12,0.22);
         }
         .prb-stat-n {
           font-family: var(--font-fraunces, serif);
@@ -408,7 +412,7 @@ export function Problem() {
           font-size: 0.5625rem;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #C6F432;
+          color: rgba(15,14,12,0.16);
           opacity: 0;
           transform: translateX(8px);
           transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1);
