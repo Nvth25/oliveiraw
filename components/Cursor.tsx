@@ -1,69 +1,120 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
 
+/**
+ * Custom editorial cursor:
+ *  - Small dot that follows mouse exactly
+ *  - Larger ring that lags behind (lerp)
+ *  - Magnetic effect: buttons/links with [data-magnetic] shift toward cursor
+ *  - Disabled below 900px viewport width
+ */
 export function Cursor() {
-  const dotRef    = useRef<HTMLDivElement>(null);
-  const ringRef   = useRef<HTMLDivElement>(null);
-  const mouse     = useRef({ x: 0, y: 0 });
-  const ring      = useRef({ x: 0, y: 0 });
-  const raf       = useRef<number>(0);
-  const hovering  = useRef(false);
+  const dotRef  = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const mouse   = useRef({ x: -100, y: -100 });
+  const ring    = useRef({ x: -100, y: -100 });
+  const raf     = useRef(0);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    if (window.innerWidth < 900) return;
+
+    const dot  = dotRef.current!;
+    const ringEl = ringRef.current!;
+
+    /* ── Move dot instantly, ring with lag ─────────────────────────────────── */
+    const onMouseMove = (e: MouseEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY };
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${e.clientX}px,${e.clientY}px) translate(-50%,-50%)`;
-      }
+      gsap.set(dot, { x: e.clientX, y: e.clientY });
     };
 
-    const loop = () => {
-      ring.current.x += (mouse.current.x - ring.current.x) * 0.12;
-      ring.current.y += (mouse.current.y - ring.current.y) * 0.12;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate(${ring.current.x}px,${ring.current.y}px) translate(-50%,-50%)`;
-      }
-      raf.current = requestAnimationFrame(loop);
-    };
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+    const tick = () => {
+      ring.current.x = lerp(ring.current.x, mouse.current.x, 0.1);
+      ring.current.y = lerp(ring.current.y, mouse.current.y, 0.1);
+      gsap.set(ringEl, { x: ring.current.x, y: ring.current.y });
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+
+    /* ── Hover states ──────────────────────────────────────────────────────── */
     const onEnter = () => {
-      hovering.current = true;
-      dotRef.current?.classList.add("scale-0");
-      ringRef.current?.classList.add("!w-10", "!h-10", "!border-olive");
+      dot.classList.add("is-hovering");
+      ringEl.classList.add("is-hovering");
     };
     const onLeave = () => {
-      hovering.current = false;
-      dotRef.current?.classList.remove("scale-0");
-      ringRef.current?.classList.remove("!w-10", "!h-10", "!border-olive");
+      dot.classList.remove("is-hovering");
+      ringEl.classList.remove("is-hovering");
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
-    document.querySelectorAll("a,button,[role=button]").forEach(el => {
+    /* ── Magnetic effect ───────────────────────────────────────────────────── */
+    const magnetics: Array<{ el: Element; onMove: (e: MouseEvent) => void; onLeave: () => void }> = [];
+
+    document.querySelectorAll("[data-magnetic]").forEach((el) => {
+      const strength = parseFloat((el as HTMLElement).dataset.magneticStrength ?? "0.3");
+      const radius = 80;
+
+      const handleMove = (e: MouseEvent) => {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < radius) {
+          const pull = ((radius - dist) / radius) * strength;
+          gsap.to(el, {
+            x: dx * pull,
+            y: dy * pull,
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: "auto",
+          });
+        } else {
+          gsap.to(el, {
+            x: 0, y: 0,
+            duration: 0.5,
+            ease: "expo.out",
+            overwrite: "auto",
+          });
+        }
+      };
+
+      const handleLeave = () => {
+        gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: "elastic.out(1, 0.4)" });
+      };
+
+      el.addEventListener("mousemove", handleMove as EventListener);
+      el.addEventListener("mouseleave", handleLeave);
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+      magnetics.push({ el, onMove: handleMove, onLeave: handleLeave });
+    });
+
+    /* interactives without magnetic */
+    document.querySelectorAll("a:not([data-magnetic]), button:not([data-magnetic])").forEach((el) => {
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
     });
 
-    raf.current = requestAnimationFrame(loop);
     return () => {
-      window.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(raf.current);
+      window.removeEventListener("mousemove", onMouseMove);
+      magnetics.forEach(({ el, onMove, onLeave: ol }) => {
+        el.removeEventListener("mousemove", onMove as EventListener);
+        el.removeEventListener("mouseleave", ol);
+      });
     };
   }, []);
 
   return (
     <>
-      <div
-        ref={dotRef}
-        aria-hidden
-        className="fixed top-0 left-0 z-[9999] w-1.5 h-1.5 rounded-full bg-olive pointer-events-none transition-transform duration-150"
-        style={{ willChange: "transform" }}
-      />
-      <div
-        ref={ringRef}
-        aria-hidden
-        className="fixed top-0 left-0 z-[9998] w-7 h-7 rounded-full border border-olive/40 pointer-events-none transition-[width,height,border-color] duration-300"
-        style={{ willChange: "transform" }}
-      />
+      <div ref={dotRef}   className="cursor-dot"  aria-hidden />
+      <div ref={ringRef}  className="cursor-ring" aria-hidden />
     </>
   );
 }

@@ -1,60 +1,88 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { LogoMark } from "./LogoMark";
 
 const LINKS = [
-  { label: "Services",   href: "#services"    },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Results",    href: "#proof"        },
-  { label: "Pricing",    href: "#offer"        },
+  { label: "Work",     href: "#work"     },
+  { label: "Services", href: "#services" },
+  { label: "Process",  href: "#process"  },
+  { label: "Results",  href: "#results"  },
 ];
 
 export function Nav() {
+  const navRef  = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", v => setScrolled(v > 48));
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <motion.header
-      className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-12"
-      style={{ height: "4.5rem" }}
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.2, ease: [0.16,1,0.3,1] }}
+    <nav
+      ref={navRef}
+      className="fixed top-0 inset-x-0 z-50 transition-all duration-500"
+      style={{
+        padding: scrolled ? "0.75rem 0" : "1.5rem 0",
+        background: scrolled ? "rgba(245,241,232,0.92)" : "transparent",
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+      }}
+      aria-label="Main navigation"
     >
-      {/* backdrop */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        animate={{
-          backdropFilter: scrolled ? "blur(20px)" : "blur(0px)",
-          backgroundColor: scrolled ? "rgba(10,14,11,0.75)" : "rgba(10,14,11,0)",
-          borderBottom: scrolled ? "1px solid rgba(184,194,138,0.08)" : "1px solid transparent",
-        }}
-        transition={{ duration: 0.5 }}
-      />
+      <div className="wrap flex items-center justify-between">
 
-      {/* logo */}
-      <a href="#" className="relative z-10 font-display font-light text-ivory/90 tracking-[0.3em] text-sm hover:text-olive transition-colors duration-300">
-        OLIVEIRA
-      </a>
+        {/* ── Logo ── */}
+        <a href="/" aria-label="OLIVEIRA home" data-magnetic className="flex items-center gap-3 group">
+          <LogoMark size={26} />
+          <span
+            className="font-display font-light leading-none"
+            style={{
+              fontSize: "0.8125rem",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              fontVariationSettings: '"opsz" 144, "SOFT" 0',
+            }}
+          >
+            Oliveira
+          </span>
+        </a>
 
-      {/* desktop links */}
-      <nav className="relative z-10 hidden md:flex items-center gap-8">
-        {LINKS.map(l => (
-          <a key={l.href} href={l.href}
-            className="text-[0.6875rem] text-muted hover:text-ivory transition-colors duration-300 tracking-widest uppercase">
-            {l.label}
+        {/* ── Links (hide below 640px) ── */}
+        <ul
+          className="list-none"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "2rem",
+          }}
+        >
+          {LINKS.map(({ label, href }) => (
+            <li key={label} className="hidden sm:block">
+              <a
+                href={href}
+                className="nav-link"
+                style={{ fontSize: "0.8125rem", letterSpacing: "0.02em", color: "rgba(15,14,12,0.5)" }}
+              >
+                <span className="nl-base">{label}</span>
+                <span className="nl-alt">{label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {/* ── CTA ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+          <a href="#contact" className="btn-ghost hidden sm:block" data-magnetic>
+            Contact
           </a>
-        ))}
-      </nav>
+          <a href="#audit" className="btn-lime" data-magnetic>
+            <span className="dot-lime" aria-hidden="true" />
+            Book free audit
+          </a>
+        </div>
 
-      {/* cta */}
-      <a
-        href="#cta"
-        className="relative z-10 inline-flex items-center gap-2 bg-olive text-void text-[0.75rem] font-semibold tracking-wide uppercase px-5 h-9 rounded-full hover:bg-olive-light transition-all duration-300 shadow-[0_0_24px_rgba(184,194,138,0.2)] hover:shadow-[0_0_36px_rgba(184,194,138,0.35)]"
-      >
-        Book Free Audit
-      </a>
-    </motion.header>
+      </div>
+    </nav>
   );
 }
