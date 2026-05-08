@@ -1,124 +1,411 @@
 "use client";
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger);
 
+/* ─── Data ───────────────────────────────────────────────────────────────────*/
 const SERVICES = [
   {
-    title: "Conversion Websites",
-    tag:   "Foundation",
-    body:  "Landing pages and full sites engineered to convert. Every element designed with intent — headline, proof, CTA.",
-    metric:"3× avg. conversion lift",
+    num: "01",
+    title: "AI Lead Capture",
+    tag: "Conversion",
+    desc: "We replace passive contact forms with intelligent capture flows — bots that qualify intent, gather context, and respond in under 60 seconds. No lead cools before you know about it.",
+    detail: "Custom-trained on your offer, tone, and ICP. Deploys to your existing site in 48 hours. Works 24/7 without a sales rep present.",
   },
   {
-    title: "Payment Integrations",
-    tag:   "Revenue",
-    body:  "Stripe, local gateways, subscription logic. Clients pay smoothly; you never chase invoices again.",
-    metric:"Zero manual billing",
+    num: "02",
+    title: "Qualification Engine",
+    tag: "Automation",
+    desc: "Three questions. That's all it takes to separate a buyer from a browser. Our engine scores every lead the moment it arrives and routes hot prospects directly to your calendar.",
+    detail: "Scoring logic tuned to your deal size and close criteria. CRM sync included. Warm leads escalate to human immediately.",
   },
   {
-    title: "WhatsApp Automation",
-    tag:   "Engagement",
-    body:  "AI sequences that qualify, nurture, and book appointments automatically via WhatsApp Business API.",
-    metric:"+37pts show-up rate",
+    num: "03",
+    title: "90-Day Follow-Up System",
+    tag: "Retention",
+    desc: "80% of revenue is lost in the silence after first contact. We build the full sequence — email, SMS, retargeting — that runs without you for three months and closes what would have slipped away.",
+    detail: "Behaviour-triggered, not calendar-triggered. Each touchpoint adapts to what the prospect has or hasn't done.",
   },
   {
-    title: "Follow-Up Systems",
-    tag:   "Retention",
-    body:  "Multi-channel automated follow-up — email, WhatsApp, SMS. No lead falls through the cracks.",
-    metric:"6× more closed deals",
+    num: "04",
+    title: "Conversion-Optimised Landing Pages",
+    tag: "Design",
+    desc: "A website that looks beautiful but converts nothing is a brochure with a domain. We build landing experiences engineered around one outcome: the next step in your funnel.",
+    detail: "Framer or Webflow. Built and live in 5 days. A/B testing framework included from day one.",
   },
   {
-    title: "Lead Capture Funnels",
-    tag:   "Acquisition",
-    body:  "High-converting opt-in pages, quiz funnels, and lead magnets that feed your CRM around the clock.",
-    metric:"340% avg. lead increase",
+    num: "05",
+    title: "CRM Architecture",
+    tag: "Infrastructure",
+    desc: "Your data is only useful if your team can act on it. We design and configure the pipeline structure, automation triggers, and reporting views so your CRM becomes a revenue tool, not a contact list.",
+    detail: "HubSpot, GoHighLevel, or custom stack. Migration, cleanup, and team training included.",
   },
   {
-    title: "CRM & Pipeline",
-    tag:   "Operations",
-    body:  "Full CRM setup — custom pipelines, lead scoring, automated stage transitions, team dashboards.",
-    metric:"28h saved per week",
+    num: "06",
+    title: "Paid Acquisition",
+    tag: "Growth",
+    desc: "We don't run ads. We build acquisition systems — full-funnel campaigns where every click has a destination and every visitor has a path. Spend follows signal, not guesswork.",
+    detail: "Meta and Google. Minimum 30-day ramp. Performance guarantee or we refund management fee.",
   },
   {
-    title: "AI Customer Interaction",
-    tag:   "Intelligence",
-    body:  "GPT-powered chatbots that handle FAQs, qualify leads, and schedule calls — your best salesperson never sleeps.",
-    metric:"24/7 qualified pipeline",
+    num: "07",
+    title: "System Audit",
+    tag: "Strategy",
+    desc: "Before building anything new, we map every leak in your current pipeline. One week. One document. A clear diagnosis of where revenue is escaping and exactly what to do about it.",
+    detail: "Delivered as a recorded walkthrough + written report. No retainer required. Can be booked standalone.",
   },
-];
+] as const;
 
+/* ─── Component ──────────────────────────────────────────────────────────────*/
 export function Services() {
-  const ref = useRef<HTMLElement>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const sectionRef  = useRef<HTMLElement>(null);
+  const headRef     = useRef<HTMLDivElement>(null);
+  const rowRefs     = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(".svc-head", { opacity:0, y:28, duration:1, ease:"expo.out",
-        scrollTrigger:{ trigger:".svc-head", start:"top 82%", once:true } });
-      gsap.from(".svc-row", { opacity:0, y:28, stagger:0.07, duration:0.85, ease:"expo.out",
-        scrollTrigger:{ trigger:".svc-row", start:"top 82%", once:true } });
-    }, ref);
-    return () => ctx.revert();
+    const mq = window.matchMedia("(max-width: 899px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    /* ── Section entrance ────────────────────────────────────────────────── */
+    gsap.set(section, { opacity: 0, y: 40 });
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top 88%",
+      onEnter: () =>
+        gsap.to(section, {
+          opacity: 1, y: 0,
+          duration: 0.7,
+          ease: "expo.out",
+        }),
+      once: true,
+    });
+
+    /* ── Header lines stagger ────────────────────────────────────────────── */
+    if (headRef.current) {
+      const lines = headRef.current.querySelectorAll(".srv-line");
+      gsap.set(lines, { opacity: 0, y: 18 });
+      ScrollTrigger.create({
+        trigger: headRef.current,
+        start: "top 80%",
+        onEnter: () =>
+          gsap.to(lines, {
+            opacity: 1, y: 0,
+            duration: 0.9,
+            stagger: 0.12,
+            ease: "expo.out",
+          }),
+        once: true,
+      });
+    }
+
+    /* ── Row stagger entrance ────────────────────────────────────────────── */
+    rowRefs.current.forEach((row, i) => {
+      if (!row) return;
+      gsap.set(row, { opacity: 0, y: 16 });
+      ScrollTrigger.create({
+        trigger: row,
+        start: "top 88%",
+        onEnter: () =>
+          gsap.to(row, {
+            opacity: 1, y: 0,
+            duration: 0.65,
+            ease: "expo.out",
+            delay: i * 0.08,
+          }),
+        once: true,
+      });
+    });
+
+    return () => { ScrollTrigger.getAll().forEach((t) => t.kill()); };
   }, []);
 
   return (
-    <section ref={ref} id="services" className="section-py bg-void overflow-hidden">
+    <section ref={sectionRef} id="services">
+
+      {/* Top rule */}
       <div className="wrap">
-        <div className="svc-head grid grid-cols-1 lg:grid-cols-2 gap-10 items-end mb-14 md:mb-18">
-          <div>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="h-px w-6 bg-olive/50" />
-              <span className="overline">Services</span>
+        <div style={{ height: "1px", background: "rgba(15,14,12,0.10)" }} />
+      </div>
+
+      <div className="wrap" style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
+
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <div ref={headRef} className="srv-header">
+          <div className="srv-header-left">
+            <p className="srv-idx">04 / Services</p>
+            <div className="srv-manifesto">
+              <p className="srv-line srv-line-reg">Seven systems.</p>
+              <p className="srv-line srv-line-em">
+                <em style={{
+                  fontVariationSettings: '"opsz" 144, "SOFT" 50, "ital" 1',
+                  fontStyle: "normal",
+                  color: "#0F0E0C",
+                }}>
+                  One outcome.
+                </em>
+              </p>
             </div>
-            <h2 className="font-display font-light text-ivory leading-[0.94] tracking-tight"
-              style={{ fontSize:"clamp(2.25rem,5vw,4.5rem)" }}>
-              Everything you need
-              <br /><span className="olive-text">to scale.</span>
-            </h2>
           </div>
-          <p className="text-base text-muted leading-relaxed max-w-sm">
-            Seven integrated systems. One cohesive engine. We don&apos;t deliver tools — we deliver outcomes.
-          </p>
+          <div className="srv-header-right srv-line">
+            <p className="srv-header-copy">
+              Every service we offer exists to solve one problem: your pipeline is leaking.
+              Some clients need one system. Most need three or four working in sequence.
+              We scope, build, and hand off — or run it for you.
+            </p>
+          </div>
         </div>
 
-        {/* list */}
-        <div className="flex flex-col divide-y divide-border">
+        {/* ── Index list ──────────────────────────────────────────────────── */}
+        <div
+          className="srv-list"
+          onMouseLeave={() => !isMobile && setHovered(null)}
+        >
           {SERVICES.map((s, i) => (
-            <motion.div key={s.title}
-              className="svc-row group flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-6 cursor-pointer"
-              whileHover={{ x: 4 }}
-              transition={{ type:"spring", stiffness:300, damping:25 }}>
+            <div
+              key={i}
+              ref={(el) => { rowRefs.current[i] = el; }}
+              className="srv-row"
+              style={{
+                opacity: !isMobile && hovered !== null && hovered !== i ? 0.4 : 1,
+                transition: "opacity 0.3s ease",
+              }}
+              onMouseEnter={() => !isMobile && setHovered(i)}
+            >
+              {/* Hairline that draws on hover */}
+              <div
+                className="srv-row-line"
+                style={{
+                  clipPath: hovered === i ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                  transition: "clip-path 0.45s cubic-bezier(0.16,1,0.3,1)",
+                }}
+                aria-hidden
+              />
 
-              <div className="flex items-start sm:items-center gap-5 flex-1">
-                <span className="font-mono text-[0.6rem] text-olive/50 w-6 shrink-0 mt-1 sm:mt-0">
-                  {String(i+1).padStart(2,"0")}
-                </span>
-                <div>
-                  <span className="text-[0.5625rem] text-olive/60 tracking-widest uppercase mb-1 block">{s.tag}</span>
-                  <h3 className="font-display font-light text-ivory group-hover:text-olive transition-colors duration-300"
-                    style={{ fontSize:"clamp(1.125rem,1.8vw,1.5rem)" }}>
-                    {s.title}
-                  </h3>
+              {/* Row header — always visible */}
+              <div className="srv-row-head">
+
+                {/* Number */}
+                <motion.span
+                  className="srv-num"
+                  animate={{ scale: hovered === i ? 1.05 : 1 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {s.num}
+                </motion.span>
+
+                {/* Title + tag */}
+                <div className="srv-title-wrap">
+                  <span className="srv-title">{s.title}</span>
+                  <span className="srv-tag">{s.tag}</span>
                 </div>
+
+                {/* Toggle icon */}
+                <motion.span
+                  className="srv-toggle"
+                  animate={{ rotate: hovered === i ? 45 : 0 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  aria-hidden
+                >
+                  +
+                </motion.span>
               </div>
 
-              <p className="text-sm text-muted leading-relaxed max-w-xs hidden md:block">{s.body}</p>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-[0.625rem] text-olive/70 border border-olive/20 rounded-full px-3 py-1 tracking-wider whitespace-nowrap group-hover:border-olive/40 transition-colors duration-300">
-                  {s.metric}
-                </span>
-                <svg className="w-4 h-4 text-olive/30 group-hover:text-olive group-hover:translate-x-0.5 transition-all duration-300" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8h10M9 4l4 4-4 4"/>
-                </svg>
-              </div>
-            </motion.div>
+              {/* Expand panel */}
+              <AnimatePresence initial={false}>
+                {(hovered === i || isMobile) && (
+                  <motion.div
+                    key="panel"
+                    initial={isMobile ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={isMobile ? undefined : { height: 0, opacity: 0 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div className="srv-panel">
+                      <p className="srv-panel-desc">{s.desc}</p>
+                      <p className="srv-panel-detail">{s.detail}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           ))}
         </div>
+
       </div>
+
+      <style>{`
+        /* ── Header ── */
+        .srv-header {
+          display: flex;
+          align-items: flex-start;
+          gap: clamp(3rem, 8vw, 10rem);
+          margin-bottom: 5rem;
+        }
+        .srv-header-left { flex-shrink: 0; }
+        .srv-header-right {
+          max-width: 40ch;
+          padding-top: 3.5rem;
+        }
+        .srv-idx {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 0.5625rem;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(15,14,12,0.32);
+          margin-bottom: 2.5rem;
+        }
+        .srv-manifesto { max-width: 20ch; }
+        .srv-line {
+          font-family: var(--font-fraunces, serif);
+          font-weight: 300;
+          line-height: 1.05;
+          letter-spacing: -0.02em;
+          display: block;
+        }
+        .srv-line-reg {
+          font-variation-settings: "opsz" 144, "SOFT" 10;
+          font-size: clamp(1.875rem, 3.2vw, 4rem);
+          color: rgba(15,14,12,0.62);
+        }
+        .srv-line-em {
+          font-variation-settings: "opsz" 144, "SOFT" 50;
+          font-size: clamp(2.25rem, 4vw, 5rem);
+          margin: 0.05em 0;
+        }
+        .srv-header-copy {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 0.9375rem;
+          line-height: 1.72;
+          color: rgba(15,14,12,0.52);
+        }
+
+        /* ── List ── */
+        .srv-list {
+          max-width: 900px;
+          border-top: 1px solid rgba(15,14,12,0.10);
+        }
+
+        /* ── Row ── */
+        .srv-row {
+          position: relative;
+          border-bottom: 1px solid rgba(15,14,12,0.10);
+          cursor: default;
+        }
+        .srv-row-line {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: rgba(15,14,12,0.55);
+          pointer-events: none;
+          z-index: 1;
+        }
+        .srv-row-head {
+          display: flex;
+          align-items: center;
+          gap: clamp(1.25rem, 3vw, 2.5rem);
+          padding: 1.625rem 0;
+        }
+        .srv-num {
+          font-family: var(--font-fraunces, serif);
+          font-variation-settings: "opsz" 9, "SOFT" 0;
+          font-size: clamp(0.625rem, 0.9vw, 0.75rem);
+          font-weight: 300;
+          letter-spacing: 0.12em;
+          color: rgba(15,14,12,0.28);
+          flex-shrink: 0;
+          display: inline-block;
+          width: 2.5rem;
+          transform-origin: left center;
+        }
+        .srv-title-wrap {
+          flex: 1;
+          display: flex;
+          align-items: baseline;
+          gap: 1.25rem;
+          min-width: 0;
+        }
+        .srv-title {
+          font-family: var(--font-fraunces, serif);
+          font-variation-settings: "opsz" 72, "SOFT" 10;
+          font-size: clamp(1.25rem, 2.2vw, 2rem);
+          font-weight: 300;
+          letter-spacing: -0.015em;
+          color: #0F0E0C;
+          line-height: 1.1;
+        }
+        .srv-tag {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 0.5rem;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(15,14,12,0.30);
+          flex-shrink: 0;
+        }
+        .srv-toggle {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 1.25rem;
+          font-weight: 300;
+          color: rgba(15,14,12,0.38);
+          flex-shrink: 0;
+          display: inline-block;
+          line-height: 1;
+          transform-origin: center center;
+          user-select: none;
+        }
+
+        /* ── Panel ── */
+        .srv-panel {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: clamp(1.5rem, 4vw, 4rem);
+          padding: 0 0 2rem calc(2.5rem + clamp(1.25rem, 3vw, 2.5rem));
+        }
+        .srv-panel-desc {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 0.9375rem;
+          line-height: 1.72;
+          color: rgba(15,14,12,0.58);
+          max-width: 38ch;
+        }
+        .srv-panel-detail {
+          font-family: var(--font-inter-tight, system-ui);
+          font-size: 0.8125rem;
+          line-height: 1.68;
+          color: rgba(15,14,12,0.38);
+          max-width: 34ch;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 899px) {
+          .srv-header {
+            flex-direction: column;
+            gap: 2rem;
+            margin-bottom: 3rem;
+          }
+          .srv-header-right { padding-top: 0; }
+          .srv-row { opacity: 1 !important; }
+          .srv-panel {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding-left: 0;
+            padding-bottom: 1.5rem;
+          }
+        }
+      `}</style>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { Nav }             from "@/components/Nav";
 import { Hero }            from "@/components/Hero";
 import { Problem }         from "@/components/Problem";
 import { Solution }        from "@/components/Solution";
+import { Services }        from "@/components/Services";
 import { HeroBackground }  from "@/components/HeroBackground";
 
 /**
@@ -22,6 +23,7 @@ export default function Home() {
         <Hero />
         <Problem />
         <Solution />
+        <Services />
       </main>
     </SmoothScroll>
   );
