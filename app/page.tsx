@@ -1,12 +1,14 @@
-import { SmoothScroll }    from "@/components/SmoothScroll";
-import { Cursor }          from "@/components/Cursor";
-import { Nav }             from "@/components/Nav";
-import { Hero }            from "@/components/Hero";
+import { SmoothScroll } from "@/components/SmoothScroll";
+import { Cursor }       from "@/components/Cursor";
+import { Nav }          from "@/components/Nav";
+import { Hero }         from "@/components/Hero";
+import { Problem }      from "@/components/Problem";
+import { Solution }     from "@/components/Solution";
 
 /**
- * Phase 1 — Foundation, Navigation, and Hero.
- * Monopo-inspired: centered full-bleed layout, fluid shader bg, monogram logo.
- * Sections (Problem → Services → Process → Results → CTA → Footer) added in Phase 2.
+ * Phase 1 — Foundation + Hero
+ * Phase 2 — Problem + Solution
+ * Phase 3 — Services, Process, Results, CTA, Footer (upcoming)
  */
 export default function Home() {
   return (
@@ -15,6 +17,8 @@ export default function Home() {
       <Nav />
       <main>
         <Hero />
+        <Problem />
+        <Solution />
       </main>
     </SmoothScroll>
   );
