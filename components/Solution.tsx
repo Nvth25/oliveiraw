@@ -154,51 +154,43 @@ export function Solution() {
     /* ── Traveling dot loop ──────────────────────────────────────────────── */
     function startLoop() {
       if (!traveler) return;
-      gsap.set(traveler, { opacity: 1 });
+
+      /*
+        Correct positions: node CENTRES, not line edges.
+        Correct timing:    pulse fires after dot ARRIVES (sequential),
+                           not when it starts moving ("<" was the bug).
+      */
+      const cx = [NODES[0].x, NODES[1].x, NODES[2].x, NODES[3].x]; // 110 370 630 890
+      const NODE_R = 44; // all nodes share the same radius
 
       const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.2 });
 
-      // Travel across each line segment, lighting nodes on arrival
-      const stops = [
-        LINES[0].x1,   // start of line 1
-        LINES[0].x2,   // → node 2
-        LINES[1].x2,   // → node 3
-        LINES[2].x2,   // → node 4
-      ];
+      // Start: dot visible at CAPTURE
+      tl.set(traveler, { attr: { cx: cx[0] }, opacity: 1 });
 
-      stops.forEach((x, i) => {
-        tl.to(
-          traveler,
-          {
-            attr: { cx: x },
-            duration: i === 0 ? 0 : 0.65,
-            ease: "power2.inOut",
-          },
-          i === 0 ? 0 : ">"
-        );
-        /* Pulse the node we just reached */
-        const nodeIdx = i === 0 ? 0 : i;
-        const n = nodeRefs.current[nodeIdx];
-        if (n) {
-          tl.to(
-            n,
-            {
-              attr: { r: NODES[nodeIdx].r + 5 },
-              fill: "rgba(15,14,12,0.10)",
-              duration: 0.2,
-              ease: "power1.out",
-              yoyo: true,
-              repeat: 1,
-            },
-            "<"
-          );
-        }
-      });
+      // Pulse CAPTURE on start
+      const n0 = nodeRefs.current[0];
+      if (n0) tl.to(n0, { attr: { r: NODE_R + 6 }, duration: 0.18, ease: "sine.out", yoyo: true, repeat: 1 });
 
-      // Fade out traveler at end before reset
-      tl.to(traveler, { opacity: 0, duration: 0.25 }, ">");
-      tl.set(traveler, { attr: { cx: LINES[0].x1 } });
-      tl.to(traveler, { opacity: 1, duration: 0.15 });
+      // Travel → QUALIFY, then pulse on arrival
+      tl.to(traveler, { attr: { cx: cx[1] }, duration: 1.0, ease: "power2.inOut" }, "+=0.15");
+      const n1 = nodeRefs.current[1];
+      if (n1) tl.to(n1, { attr: { r: NODE_R + 6 }, duration: 0.18, ease: "sine.out", yoyo: true, repeat: 1 });
+
+      // Travel → CONVERT, then pulse on arrival
+      tl.to(traveler, { attr: { cx: cx[2] }, duration: 1.0, ease: "power2.inOut" }, "+=0.15");
+      const n2 = nodeRefs.current[2];
+      if (n2) tl.to(n2, { attr: { r: NODE_R + 6 }, duration: 0.18, ease: "sine.out", yoyo: true, repeat: 1 });
+
+      // Travel → RETAIN, then pulse on arrival
+      tl.to(traveler, { attr: { cx: cx[3] }, duration: 1.0, ease: "power2.inOut" }, "+=0.15");
+      const n3 = nodeRefs.current[3];
+      if (n3) tl.to(n3, { attr: { r: NODE_R + 6 }, duration: 0.18, ease: "sine.out", yoyo: true, repeat: 1 });
+
+      // Hold, then fade out and reset
+      tl.to(traveler, { opacity: 0, duration: 0.3 }, "+=0.5");
+      tl.set(traveler, { attr: { cx: cx[0] } });
+      tl.to(traveler, { opacity: 1, duration: 0.2 });
 
       loopTl.current = tl;
     }
@@ -282,7 +274,7 @@ export function Solution() {
             {/* ── Traveling dot ── */}
             <circle
               ref={travelerRef}
-              cx={LINES[0].x1}
+              cx={NODES[0].x}
               cy={90}
               r={4}
               fill="#0F0E0C"
